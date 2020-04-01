@@ -1,0 +1,22 @@
+@import "node_modules/bootstrap/scss/_functions";
+@import "config/_bootstrap-variable";
+@import "node_modules/bootstrap/scss/_mixins";
+
+@import "node_modules/bootstrap/scss/_grid";
+@import "node_modules/bootstrap/scss/_images";
+
+@import "node_modules/bootstrap/scss/_buttons";
+@import "node_modules/bootstrap/scss/_tables";
+@import "node_modules/bootstrap/scss/_forms";
+@import "node_modules/bootstrap/scss/_card";
+@import "node_modules/bootstrap/scss/_utilities";
+
+@import "config/_variables";
+
+@import "mixin/_mixin";
+@import "extend/_extends";
+
+@import "config/_reset";
+@import "config/_reboot";
+
+// @import "utilities/_utilities";
