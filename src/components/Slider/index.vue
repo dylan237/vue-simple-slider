@@ -5,10 +5,6 @@
         <img :src="img.url" :alt="img.name" />
       </li>
     </ul>
-    <div class="arrows">
-      <div class="arrows__left"></div>
-      <div class="arrows__right"></div>
-    </div>
     <div class="dots-wrap" v-if="hasDots">
       <div
         v-for="dot in data"

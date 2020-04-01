@@ -3,6 +3,7 @@
     <div class="d-container">
       <Slider :data="sliderData" :duration="2000" arrow dots />
     </div>
+    <div>qwdw</div>
   </div>
 </template>
 
@@ -48,7 +49,7 @@ export default {
 <style lang="scss" scoped>
 .d-container {
   width: 100%;
-  max-width: 548px;
+  // max-width: 548px;
   margin: 0 auto;
   background-color: rgb(207, 207, 207);
 }
