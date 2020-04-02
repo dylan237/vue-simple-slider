@@ -1,13 +1,14 @@
 <template>
   <div id="d-slider">
-    <ul :style="getWrapWidth">
+    <ul :style="wrapperStyle">
       <li v-for="img in newData" :key="img.id">
         <img :src="img.url" :alt="img.name" />
       </li>
     </ul>
     <div class="dots-wrap" v-if="hasDots">
       <div
-        v-for="dot in data"
+        v-for="dot in newData"
+        v-show="hideFirstAndLastDot(dot.id)"
         :key="dot.id"
         @click="handleDotAction(dot.id)"
         class="dot"
@@ -15,8 +16,8 @@
       ></div>
     </div>
     <div class="arrow-wrap" v-if="hasArrow">
-      <div class="arrow arrow-left" @click="handleArrow(-1)"></div>
-      <div class="arrow arrow-right" @click="handleArrow(1)"></div>
+      <div class="arrow arrow-left" @click="handleArrowAction(-1)"></div>
+      <div class="arrow arrow-right" @click="handleArrowAction(1)"></div>
     </div>
   </div>
 </template>
@@ -39,22 +40,30 @@ export default {
     return {
       wrapWidth: 100,
       wrpaTransform: 0,
-      currentImgLocation: 0,
+      currentImgLocation: 1,
+      transitionText: `all 0.5s ease`,
     }
   },
   computed: {
     newData() {
-      const firstImg = { ...this.data[0] }
-      let id = this.data[this.data.length - 1].id
-      firstImg.id = id + 1
       const dataClone = Array.from(this.data)
+      // 將第一張圖複製後插入陣列最後
+      const firstImg = { ...this.data[0] }
+      let firstImgId = this.data[this.data.length - 1].id
+      firstImg.id = firstImgId + 1
       dataClone.splice(this.data.length, 0, firstImg)
+      // 將最後一張圖複製後插入陣列最前
+      const lastImg = { ...this.data[this.data.length - 1] }
+      let lastImgId = 0
+      lastImg.id = lastImgId
+      dataClone.splice(0, 0, lastImg)
       return dataClone
     },
-    getWrapWidth() {
+    wrapperStyle() {
       return {
         width: `${this.wrapWidth}%`,
         transform: `translateX(-${this.wrpaTransform}%)`,
+        transition: this.transitionText,
       }
     },
     percentage() {
@@ -68,40 +77,52 @@ export default {
     },
   },
   methods: {
+    handleLastAndFisrtTurn(currentLocation, dir) {
+      return new Promise(resolve => {
+        this.currentImgLocation += dir
+        this.wrpaTransform = this.currentImgLocation * this.percentage
+        this.currentImgLocation = currentLocation
+        resolve('done')
+      })
+    },
+    handleThen() {
+      this.transitionText = 'none'
+      this.wrpaTransform = this.currentImgLocation * this.percentage
+    },
+    hideFirstAndLastDot(dotId) {
+      return dotId !== 0 && dotId !== this.newData.length - 1
+    },
     handleDotAction(id) {
       this.wrpaTransform = id * this.percentage
       this.currentImgLocation = id
     },
-    handleArrow(dir) {
+    handleArrowAction(dir = 1) {
       const num = this.currentImgLocation
-      if (num + dir === this.data.length) {
-        this.currentImgLocation = 0
-      } else if (num + dir < 0) {
-        this.currentImgLocation = this.data.length - 1
+      if (num + dir === this.newData.length - 1) {
+        this.handleLastAndFisrtTurn(1, dir).then(res => {
+          setTimeout(this.handleThen, 450)
+        })
+      } else if (num + dir === 0) {
+        this.handleLastAndFisrtTurn(this.data.length, dir).then(res => {
+          setTimeout(this.handleThen, 450)
+        })
       } else {
+        this.transitionText = `all 0.5s ease`
         this.currentImgLocation += dir
-      }
-      this.wrpaTransform = this.currentImgLocation * this.percentage
-    },
-    autoSlide() {
-      this.currentImgLocation += 1
-      if (this.currentImgLocation === this.newData.length - 1) this.currentImgLocation = 0
-      if (this.currentImgLocation < this.newData.length) {
         this.wrpaTransform = this.currentImgLocation * this.percentage
-      } else {
-        this.currentImgLocation = 0
       }
     },
   },
   created() {
     this.wrapWidth = this.newData.length * 100
+    console.log(this.newData)
   },
   mounted() {
-    setInterval(this.autoSlide, this.duration)
+    setInterval(this.handleArrowAction, this.duration)
   },
-  watch: {},
   beforeDestroy() {
-    clearInterval(this.autoSlide)
+    clearInterval(this.handleArrowAction)
+    clearTimeout(this.handleThen)
   },
 }
 </script>
