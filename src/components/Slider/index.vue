@@ -10,14 +10,14 @@
         v-for="dot in newData"
         v-show="hideFirstAndLastDot(dot.id)"
         :key="dot.id"
-        @click="handleDotAction(dot.id)"
+        @click="handleDotAction(dot.id, true)"
         class="dot"
         :class="{ 'dot--active': currentImgLocation === dot.id }"
       ></div>
     </div>
     <div class="arrow-wrap" v-if="hasArrow">
-      <div class="arrow arrow-left" @click="handleArrowAction(-1)"></div>
-      <div class="arrow arrow-right" @click="handleArrowAction(1)"></div>
+      <div class="arrow arrow-left" @click="handleArrowAction(-1, true)"></div>
+      <div class="arrow arrow-right" @click="handleArrowAction(1, true)"></div>
     </div>
   </div>
 </template>
@@ -92,25 +92,29 @@ export default {
     hideFirstAndLastDot(dotId) {
       return dotId !== 0 && dotId !== this.newData.length - 1
     },
-    handleDotAction(id) {
+    handleDotAction(id, isUserTriggered = false) {
+      if (isUserTriggered) clearInterval(this.intervalTimer)
       this.wrpaTransform = id * this.percentage
       this.currentImgLocation = id
+      if (isUserTriggered) this.intervalTimer = setInterval(this.handleArrowAction, this.duration)
     },
-    handleArrowAction(dir = 1) {
+    handleArrowAction(dir = 1, isUserTriggered = false) {
+      if (isUserTriggered) clearInterval(this.intervalTimer)
       const num = this.currentImgLocation
       if (num + dir === this.newData.length - 1) {
         this.handleLastAndFisrtTurn(1, dir).then(res => {
-          setTimeout(this.handleThen, 450)
+          this.timeoutTimer = setTimeout(this.handleThen, 450)
         })
       } else if (num + dir === 0) {
         this.handleLastAndFisrtTurn(this.data.length, dir).then(res => {
-          setTimeout(this.handleThen, 450)
+          this.timeoutTimer = setTimeout(this.handleThen, 450)
         })
       } else {
         this.transitionText = `all 0.5s ease`
         this.currentImgLocation += dir
         this.wrpaTransform = this.currentImgLocation * this.percentage
       }
+      if (isUserTriggered) this.intervalTimer = setInterval(this.handleArrowAction, this.duration)
     },
   },
   created() {
@@ -118,11 +122,11 @@ export default {
     console.log(this.newData)
   },
   mounted() {
-    setInterval(this.handleArrowAction, this.duration)
+    this.intervalTimer = setInterval(this.handleArrowAction, this.duration)
   },
   beforeDestroy() {
-    clearInterval(this.handleArrowAction)
-    clearTimeout(this.handleThen)
+    clearInterval(this.intervalTimer)
+    clearTimeout(this.timeoutTimer)
   },
 }
 </script>
