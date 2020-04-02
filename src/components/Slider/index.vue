@@ -46,9 +46,12 @@ export default {
       wrpaTransform: 0,
       currentImgLocation: 1,
       transitionTextCache: this.transitionText,
+      isLimit: false, // 限制箭頭點擊
+      limitDuration: 500, // 時間內重複點擊箭頭會失效
     }
   },
   computed: {
+    // 處理無縫切換效果
     newData() {
       const dataClone = Array.from(this.data)
       // 將第一張圖複製後插入陣列最後
@@ -70,6 +73,7 @@ export default {
         transition: this.transitionText,
       }
     },
+    // 每張圖片的偏移量
     percentage() {
       return 100 / this.newData.length
     },
@@ -84,6 +88,8 @@ export default {
     updatedTransitionText(val) {
       this.$emit('update:transitionText', val)
     },
+    // 輪播到最後一張圖或第一張圖時進行特別處理
+    // - 以動畫過渡方式偏移到額外插入的最後一張圖(第一張圖的clone)，之後關掉動畫過渡，瞬間切回第一張圖，第二步時因為沒有動畫過渡效果，視覺上看不出來，達到無縫輪播效果
     handleLastAndFisrtTurn(currentLocation, dir) {
       return new Promise(resolve => {
         this.currentImgLocation += dir
@@ -95,19 +101,33 @@ export default {
     handleThen() {
       this.updatedTransitionText(`none`)
       this.wrpaTransform = this.currentImgLocation * this.percentage
+      this.resetTransitionText = setTimeout(() => {
+        this.updatedTransitionText(this.transitionTextCache)
+        clearTimeout(this.resetTransitionText)
+        clearTimeout(this.timeoutTimer)
+      }, 300)
     },
+    // 隱藏額外插入的前後兩張圖的點點
     hideFirstAndLastDot(dotId) {
       return dotId !== 0 && dotId !== this.newData.length - 1
     },
     handleDotAction(id, isUserTriggered = false) {
-      if (isUserTriggered) clearInterval(this.intervalTimer)
+      if (isUserTriggered) clearInterval(this.autoPlayTimer)
       this.updatedTransitionText(this.transitionTextCache)
       this.wrpaTransform = id * this.percentage
       this.currentImgLocation = id
-      if (isUserTriggered) this.intervalTimer = setInterval(this.handleArrowAction, this.duration)
+      if (isUserTriggered) this.autoPlayTimer = setInterval(this.handleArrowAction, this.duration)
     },
     handleArrowAction(dir = 1, isUserTriggered = false) {
-      if (isUserTriggered) clearInterval(this.intervalTimer)
+      if (this.isLimit) return
+      if (isUserTriggered) {
+        clearInterval(this.autoPlayTimer)
+        this.isLimit = true
+        const intervalLimitTimer = setTimeout(() => {
+          this.isLimit = false
+          clearTimeout(this.intervalLimitTimer)
+        }, this.limitDuration)
+      }
       const num = this.currentImgLocation
       if (num + dir === this.newData.length - 1) {
         this.handleLastAndFisrtTurn(1, dir).then(res => {
@@ -122,7 +142,19 @@ export default {
         this.currentImgLocation += dir
         this.wrpaTransform = this.currentImgLocation * this.percentage
       }
-      if (isUserTriggered) this.intervalTimer = setInterval(this.handleArrowAction, this.duration)
+      if (isUserTriggered) this.autoPlayTimer = setInterval(this.handleArrowAction, this.duration)
+    },
+    handleKeydown(e) {
+      switch (e.keyCode) {
+        case 37:
+          this.handleArrowAction(-1, true)
+          break
+        case 39:
+          this.handleArrowAction(1, true)
+          break
+        default:
+          return
+      }
     },
   },
   created() {
@@ -130,11 +162,12 @@ export default {
     console.log(this.newData)
   },
   mounted() {
-    this.intervalTimer = setInterval(this.handleArrowAction, this.duration)
+    this.autoPlayTimer = setInterval(this.handleArrowAction, this.duration)
+    addEventListener('keydown', this.handleKeydown)
   },
   beforeDestroy() {
-    clearInterval(this.intervalTimer)
-    clearTimeout(this.timeoutTimer)
+    clearInterval(this.autoPlayTimer)
+    removeEventListener('keydown', this.handleKeydown)
   },
 }
 </script>
@@ -184,11 +217,16 @@ export default {
 .arrow {
   position: absolute;
   @include color-contrast('dylan', true);
+  background-color: rgba(theme-color('dylan'), 0.5);
+  transition: background-color 0.3 ease-in-out;
   top: 50%;
-  width: 20px;
-  height: 20px;
+  width: 40px;
+  height: 40px;
   cursor: pointer;
   border-radius: 100%;
+  &:hover {
+    opacity: 0.5;
+  }
 }
 .arrow-left {
   left: 10px;
