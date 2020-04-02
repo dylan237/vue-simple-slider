@@ -35,13 +35,16 @@ export default {
       type: Number,
       default: 2000,
     },
+    transitionText: {
+      type: String,
+      default: `all 0.5s ease`,
+    },
   },
   data() {
     return {
       wrapWidth: 100,
       wrpaTransform: 0,
       currentImgLocation: 1,
-      transitionText: `all 0.5s ease`,
     }
   },
   computed: {
@@ -77,6 +80,9 @@ export default {
     },
   },
   methods: {
+    updatedTransitionText(val) {
+      this.$emit('update:transitionText', val)
+    },
     handleLastAndFisrtTurn(currentLocation, dir) {
       return new Promise(resolve => {
         this.currentImgLocation += dir
@@ -86,7 +92,7 @@ export default {
       })
     },
     handleThen() {
-      this.transitionText = 'none'
+      this.updatedTransitionText(`none`)
       this.wrpaTransform = this.currentImgLocation * this.percentage
     },
     hideFirstAndLastDot(dotId) {
@@ -94,6 +100,7 @@ export default {
     },
     handleDotAction(id, isUserTriggered = false) {
       if (isUserTriggered) clearInterval(this.intervalTimer)
+      this.updatedTransitionText(`all 0.5s ease`)
       this.wrpaTransform = id * this.percentage
       this.currentImgLocation = id
       if (isUserTriggered) this.intervalTimer = setInterval(this.handleArrowAction, this.duration)
@@ -110,7 +117,7 @@ export default {
           this.timeoutTimer = setTimeout(this.handleThen, 450)
         })
       } else {
-        this.transitionText = `all 0.5s ease`
+        this.updatedTransitionText(`all 0.5s ease`)
         this.currentImgLocation += dir
         this.wrpaTransform = this.currentImgLocation * this.percentage
       }

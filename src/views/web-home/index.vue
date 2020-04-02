@@ -1,7 +1,7 @@
 <template>
   <div class="home">
     <div class="d-container">
-      <Slider :data="sliderData" :duration="2000" arrow dots />
+      <Slider :data="sliderData" :duration="2000" arrow dots :transitionText.sync="text" />
     </div>
     <div>qwdw</div>
   </div>
@@ -12,6 +12,7 @@ export default {
   name: 'home',
   data() {
     return {
+      text: `all 0.5s ease`,
       sliderData: [
         {
           id: 1,
