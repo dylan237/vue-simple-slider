@@ -45,6 +45,7 @@ export default {
       wrapWidth: 100,
       wrpaTransform: 0,
       currentImgLocation: 1,
+      transitionTextCache: this.transitionText,
     }
   },
   computed: {
@@ -100,7 +101,7 @@ export default {
     },
     handleDotAction(id, isUserTriggered = false) {
       if (isUserTriggered) clearInterval(this.intervalTimer)
-      this.updatedTransitionText(`all 0.5s ease`)
+      this.updatedTransitionText(this.transitionTextCache)
       this.wrpaTransform = id * this.percentage
       this.currentImgLocation = id
       if (isUserTriggered) this.intervalTimer = setInterval(this.handleArrowAction, this.duration)
@@ -117,7 +118,7 @@ export default {
           this.timeoutTimer = setTimeout(this.handleThen, 450)
         })
       } else {
-        this.updatedTransitionText(`all 0.5s ease`)
+        this.updatedTransitionText(this.transitionTextCache)
         this.currentImgLocation += dir
         this.wrpaTransform = this.currentImgLocation * this.percentage
       }
