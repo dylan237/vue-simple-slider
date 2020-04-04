@@ -12,7 +12,7 @@ export default {
   name: 'home',
   data() {
     return {
-      text: `all 0.5s ease`,
+      text: `0.5s`,
       sliderData: [
         {
           id: 1,

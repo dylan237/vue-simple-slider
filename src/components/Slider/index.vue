@@ -23,6 +23,20 @@
 </template>
 
 <script>
+// 防抖函數，透過閉包紀錄時間，若在限制時間內則不重複執行該函數。
+function throttle(func, wait) {
+  let context, args
+  let previous = 0
+  return function() {
+    let now = +new Date()
+    context = this
+    args = arguments
+    if (now - previous > wait) {
+      func.apply(context, args)
+      previous = now
+    }
+  }
+}
 export default {
   name: 'Slider',
   components: {},
@@ -37,7 +51,7 @@ export default {
     },
     transitionText: {
       type: String,
-      default: `all 0.5s ease`,
+      default: `0.5s`,
     },
   },
   data() {
@@ -99,7 +113,7 @@ export default {
       })
     },
     handleThen() {
-      this.updatedTransitionText(`none`)
+      this.updatedTransitionText(`0s`)
       this.wrpaTransform = this.currentImgLocation * this.percentage
       this.resetTransitionText = setTimeout(() => {
         this.updatedTransitionText(this.transitionTextCache)
@@ -118,16 +132,29 @@ export default {
       this.currentImgLocation = id
       if (isUserTriggered) this.autoPlayTimer = setInterval(this.handleArrowAction, this.duration)
     },
-    handleArrowAction(dir = 1, isUserTriggered = false) {
-      if (this.isLimit) return
-      if (isUserTriggered) {
-        clearInterval(this.autoPlayTimer)
-        this.isLimit = true
-        const intervalLimitTimer = setTimeout(() => {
-          this.isLimit = false
-          clearTimeout(this.intervalLimitTimer)
-        }, this.limitDuration)
-      }
+    // handleArrowAction: throttle(function(dir = 1, isUserTriggered = false) {
+    //   this.updatedTransitionText(this.transitionTextCache)
+    //   this.currentImgLocation += dir
+    //   this.wrpaTransform = this.currentImgLocation * this.percentage
+
+    //   if (this.currentImgLocation === this.newData.length - 1) {
+    //     this.currentImgLocation = 1
+    //     this.timer = setTimeout(() => {
+    //       console.log(1)
+    //       this.updatedTransitionText(`0s`)
+    //       this.wrpaTransform = this.currentImgLocation * this.percentage
+    //     }, 600)
+    //   } else if (this.currentImgLocation === 0) {
+    //     this.currentImgLocation = this.data.length
+    //     this.timer = setTimeout(() => {
+    //       console.log(2)
+    //       this.updatedTransitionText(`0s`)
+    //       this.wrpaTransform = this.currentImgLocation * this.percentage
+    //     }, 600)
+    //   }
+    // }, 400),
+    handleArrowAction: throttle(function(dir = 1, isUserTriggered = false) {
+      if (isUserTriggered) clearInterval(this.autoPlayTimer)
       const num = this.currentImgLocation
       if (num + dir === this.newData.length - 1) {
         this.handleLastAndFisrtTurn(1, dir).then(res => {
@@ -143,7 +170,7 @@ export default {
         this.wrpaTransform = this.currentImgLocation * this.percentage
       }
       if (isUserTriggered) this.autoPlayTimer = setInterval(this.handleArrowAction, this.duration)
-    },
+    }, 400),
     handleKeydown(e) {
       switch (e.keyCode) {
         case 37:
@@ -162,11 +189,11 @@ export default {
     console.log(this.newData)
   },
   mounted() {
-    this.autoPlayTimer = setInterval(this.handleArrowAction, this.duration)
+    // this.autoPlayTimer = setInterval(this.handleArrowAction, this.duration)
     addEventListener('keydown', this.handleKeydown)
   },
   beforeDestroy() {
-    clearInterval(this.autoPlayTimer)
+    // clearInterval(this.autoPlayTimer)
     removeEventListener('keydown', this.handleKeydown)
   },
 }
